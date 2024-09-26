@@ -1,42 +1,124 @@
-const bcrypt = require('bcrypt');
-const userSchema = require('../modals/userModel');
-const jwt = require('jsonwebtoken');
-const { registerSchema, loginSchema,profileUpdateSchema } = require('../validations/userValidation');
+
+const userService = require('../services/userService');
+const sendEmail = require('../utils/sendEmail');
 
 exports.registerUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const { error } = registerSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({
-        result: {},
-        message: error.details[0].message,
-        status: 'error',
-        responseCode: 400
-      });
-    }
-
-    const existingUser = await userSchema.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        result: {},
-        message: 'User already exists',
-        status: 'error',
-        responseCode: 400
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = new userSchema({ email, password: hashedPassword });
-    await user.save();
-
+    const user = await userService.registerUser(email, password);
     return res.status(201).json({
       result: user,
       message: 'User registered successfully',
       status: 'success',
-      responseCode: 201
+      responseCode: 201,
+    });
+  } catch (err) {
+    return res.status(400).json({
+      result: {},
+      message: err.message,
+      status: 'error',
+      responseCode: 400,
+    });
+  }
+};
+
+exports.loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const token = await userService.loginUser(email, password);
+    return res.status(200).json({
+      result: { token },
+      message: 'Logged in successfully',
+      status: 'success',
+      responseCode: 200,
+    });
+  } catch (err) {
+    return res.status(400).json({
+      result: {},
+      message: err.message,
+      status: 'error',
+      responseCode: 400,
+    });
+  }
+};
+
+exports.updateUserProfile = async (req, res) => {
+  const { firstName, lastName, community_name, zipCode, phone_No, address } = req.body;
+  const userId = req.user.id;
+  const updateData = { firstName, lastName, community_name, zipCode, phone_No, address };
+
+  try {
+    const updatedUser = await userService.updateUserProfile(userId, updateData, req.files?.image);
+    return res.status(200).json({
+      result: updatedUser,
+      message: 'Profile updated successfully',
+      status: 'success',
+      responseCode: 200,
+    });
+  } catch (err) {
+    return res.status(400).json({
+      result: {},
+      message: err.message,
+      status: 'error',
+      responseCode: 400,
+    });
+  }
+};
+
+exports.changeUserPassword = async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const userId = req.user.id;
+
+  try {
+    await userService.changeUserPassword(userId, oldPassword, newPassword);
+    return res.status(200).json({
+      result: {},
+      message: 'Password changed successfully',
+      status: 'success',
+      responseCode: 200,
+    });
+  } catch (err) {
+    return res.status(400).json({
+      result: {},
+      message: err.message,
+      status: 'error',
+      responseCode: 400,
+    });
+  }
+};
+
+exports.changeUserEmail = async (req, res) => {
+  const { currentEmail, newEmail } = req.body;
+  const userId = req.user.id;
+
+  try {
+    await userService.changeUserEmail(userId, currentEmail, newEmail);
+    return res.status(200).json({
+      message: 'Email updated successfully',
+      status: 'success',
+      responseCode: 200,
+    });
+  } catch (err) {
+    return res.status(400).json({
+      message: err.message,
+      status: 'error',
+      responseCode: 400,
+    });
+  }
+};
+
+exports.deleteUserAccount = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    await userService.deleteUserAccount(userId);
+    return res.status(200).json({
+      result: {},
+      message: 'Account deleted successfully',
+      status: 'success',
+      responseCode: 200,
     });
   } catch (err) {
     return res.status(500).json({
@@ -44,142 +126,72 @@ exports.registerUser = async (req, res) => {
       message: 'Server error',
       status: 'error',
       responseCode: 500,
-      error: err.message
+      error: err.message,
     });
   }
 };
 
-exports.loginUser = async (req, res) => {
-    const { email, password } = req.body;
+exports.getUserProfile = async (req, res) => {
+  const userId = req.user.id;
 
-    try {
-        const { error } = loginSchema.validate(req.body);
-        if (error) {
-            return res.status(400).json({
-                result: {},
-                message: error.details[0].message,
-                status: 'error',
-                responseCode: 400
-            });
-        }
-
-        const user = await userSchema.findOne({ email });
-        if (!user) {
-            return res.status(400).json({
-                result: {},
-                message: 'Invalid email or password',
-                status: 'error',
-                responseCode: 400
-            });
-        }
-
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) {
-            return res.status(400).json({
-                result: {},
-                message: 'Invalid email or password',
-                status: 'error',
-                responseCode: 400
-            });
-        }
-
-        const token = jwt.sign(
-            { id: user._id, email: user.email },
-            process.env.JWT_SECRET || 'secretkey', 
-            { expiresIn: '12h' }
-        );
-
-        return res.status(200).json({
-            result: { token },
-            message: 'Logged in successfully',
-            status: 'success',
-            responseCode: 200
-        });
-    } catch (err) {
-        console.error('Error logging in user:', err); 
-        return res.status(500).json({
-            result: {},
-            message: 'Server error',
-            status: 'error',
-            responseCode: 500,
-            error: err.message
-        });
-    }
+  try {
+    const userProfile = await userService.getUserProfile(userId);
+    return res.status(200).json({
+      result: userProfile,
+      message: 'User profile fetched successfully',
+      status: 'success',
+      responseCode: 200,
+    });
+  } catch (err) {
+    return res.status(404).json({
+      result: {},
+      message: err.message,
+      status: 'error',
+      responseCode: 404,
+    });
+  }
 };
 
-exports.updateUserProfile = async (req, res) => {
-    try {
-      const { firstName, lastName, community_name, zipCode, phone_No, address } = req.body;
-  console.log(req.body);
-  
-      const { error } = profileUpdateSchema.validate({
-        firstName,
-        lastName,
-        community_name,
-        zipCode,
-        phone_No,
-        address,
-        image: req.files ? req.files.image : null, 
-      });
-  
-      if (error) {
-        return res.status(400).json({
-          result: {},
-          message: error.details[0].message,
-          status: 'error',
-          responseCode: 400,
-        });
-      }
-  
-      let imageBuffer = null;
-      if (req.files && req.files.image) {
-        const file = req.files.image;
-        const base64Image = file.data.toString('base64');
-        imageBuffer = Buffer.from(base64Image, 'base64');
-      }
-  
-      const updateData = {
-        firstName,
-        lastName,
-        community_name,
-        zipCode,
-        phone_No,
-        address,
-        updated_at: Date.now(),
-      };
-  
-      if (imageBuffer) {
-        updateData.image = imageBuffer;
-      }
-  
-      const userId = req.user.id;
-      console.log(userId);
-      
-      const updatedUser = await userSchema.findByIdAndUpdate(userId, updateData, { new: true });
-  
-      if (!updatedUser) {
-        return res.status(404).json({
-          result: {},
-          message: 'User not found',
-          status: 'error',
-          responseCode: 404,
-        });
-      }
-  
-      return res.status(200).json({
-        result: updatedUser,
-        message: 'Profile updated successfully',
-        status: 'success',
-        responseCode: 200,
-      });
-    } catch (err) {
-      return res.status(500).json({
-        result: {},
-        message: 'Server error',
-        status: 'error',
-        responseCode: 500,
-        error: err.message,
-      });
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const otpData = await userService.forgotPassword(email);
+    await sendEmail(email, 'Password Reset OTP', `Your OTP is ${otpData.otp}. It will expire in 10 minutes.`);
+    return res.status(200).json({
+      message: 'OTP sent to your email',
+      status: 'success',
+      responseCode: 200,
+    });
+  } catch (err) {
+    return res.status(404).json({
+      message: err.message,
+      status: 'error',
+      responseCode: 404,
+    });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body; 
+    
+    if (typeof otp !== 'string' && typeof otp !== 'number') {
+      throw new Error('Invalid OTP format');
     }
-  
-}
+
+    await userService.resetPassword(email, otp, newPassword);
+    return res.status(200).json({
+      message: 'Password reset successfully',
+      status: 'success',
+      responseCode: 200,
+    });
+  } catch (err) {
+    return res.status(400).json({
+      message: err.message,
+      status: 'error',
+      responseCode: 400,
+    });
+  }
+};
+
