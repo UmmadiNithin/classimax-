@@ -1,8 +1,11 @@
 
  const userSchema = require('./modals/userModel');
+ const CategorySchema  = require('./modals/categoryModel');
+
 const express = require('express');
 const connectDB = require('./config/db'); 
 const userRoutes = require('./routes/userRoutes');
+const categoryRoutes=require('./routes/categoryRoutes')
 const fileUpload = require('express-fileupload');
 
 const app = express();
@@ -15,6 +18,8 @@ app.use(fileUpload());
 
 // Routes
 app.use('/api/user', userRoutes);
+app.use('/api/category', categoryRoutes);
+
 
 
 app.listen(PORT, () => {
