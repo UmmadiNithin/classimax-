@@ -1,4 +1,6 @@
 const CategorySchema = require('../modals/categoryModel');
+const SubCategorySchema= require('../modals/subCategoryModel');
+
 
 const createCategoryService = async (category_name, userId) => {
     const existingCategory = await CategorySchema.findOne({ category_name: category_name.trim() });
@@ -17,27 +19,38 @@ const createCategoryService = async (category_name, userId) => {
     return await category.save();
 };
 
+
 const fetchAllCategoriesService = async () => {
-    return await CategorySchema.find();
+    return await CategorySchema.find().populate('subcategories');
 };
+
 
 const removeCategoryService = async (categoryId, userId) => {
     const category = await CategorySchema.findById(categoryId);
+   
     if (!category) {
         throw { message: 'Category not found', responseCode: 404 };
     }
+
     if (category.created_by.toString() !== userId.toString()) {
         throw { message: 'Unauthorized to delete this category', responseCode: 403 };
     }
 
+    
     await CategorySchema.findByIdAndDelete(categoryId);
+
+    await SubCategorySchema.deleteMany({ categoryId: categoryId });
 };
 
+
 const fetchSingleCategoryService = async (categoryId, userId) => {
-    const category = await CategorySchema.findById(categoryId);
+    const category = await CategorySchema.findById(categoryId)
+        .populate('subcategories');
+    
     if (!category) {
         throw { message: 'Category not found', responseCode: 404 };
     }
+
     if (category.created_by.toString() !== userId.toString()) {
         throw { message: 'Unauthorized to view this category', responseCode: 403 };
     }

@@ -34,6 +34,26 @@ const addCategory = async (req, res) => {
     }
 };
 
+// const getAllCategories = async (req, res) => {
+//     try {
+//         const categories = await fetchAllCategoriesService();
+//         return res.status(200).json({
+//             result: categories,
+//             message: 'Categories retrieved successfully',
+//             status: 'success',
+//             responseCode: 200,
+//         });
+//     } catch (error) {
+//         return res.status(500).json({
+//             result: {},
+//             message: 'Server Error',
+//             status: 'error',
+//             responseCode: 500,
+//         });
+//     }
+// };
+
+
 const getAllCategories = async (req, res) => {
     try {
         const categories = await fetchAllCategoriesService();
@@ -53,6 +73,51 @@ const getAllCategories = async (req, res) => {
     }
 };
 
+// const deleteCategory = async (req, res) => {
+//     try {
+//         const { categoryId } = req.params;
+//         const userId = req.user.id;
+
+//         await removeCategoryService(categoryId, userId);
+
+//         return res.status(200).json({
+//             result: {},
+//             message: 'Category deleted successfully',
+//             status: 'success',
+//             responseCode: 200,
+//         });
+//     } catch (error) {
+//         return res.status(error.responseCode || 500).json({
+//             result: {},
+//             message: error.message || 'Server Error',
+//             status: 'error',
+//             responseCode: error.responseCode || 500,
+//         });
+//     }
+// };
+
+// const getSingleCategory = async (req, res) => {
+//     try {
+//         const categoryId = req.params.id;
+//         const userId = req.user.id;
+//         const category = await fetchSingleCategoryService(categoryId, userId);
+
+//         return res.status(200).json({
+//             result: category,
+//             message: 'Category fetched successfully',
+//             status: 'success',
+//             responseCode: 200,
+//         });
+//     } catch (error) {
+//         return res.status(error.responseCode || 500).json({
+//             result: {},
+//             message: error.message || 'Server Error',
+//             status: 'error',
+//             responseCode: error.responseCode || 500,
+//         });
+//     }
+// };
+
 const deleteCategory = async (req, res) => {
     try {
         const { categoryId } = req.params;
@@ -62,7 +127,7 @@ const deleteCategory = async (req, res) => {
 
         return res.status(200).json({
             result: {},
-            message: 'Category deleted successfully',
+            message: 'Category and its subcategories deleted successfully',
             status: 'success',
             responseCode: 200,
         });
@@ -75,6 +140,7 @@ const deleteCategory = async (req, res) => {
         });
     }
 };
+
 
 const getSingleCategory = async (req, res) => {
     try {

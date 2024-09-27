@@ -2,17 +2,13 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const SubCategorySchema = new Schema({
-  _id: {
-    type: Schema.Types.ObjectId,
-    required: true
-  },
   subcat_name: {
     type: String,
     required: true
   },
   categoryId: {
     type: Schema.Types.ObjectId,
-    ref: 'Category', // Foreign key reference to Category
+    ref: 'Category',
     required: true
   },
   created_at: {
