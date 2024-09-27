@@ -38,8 +38,55 @@ const profileUpdateSchema = Joi.object({
     address: Joi.string().optional(),
     image: Joi.any().optional(), 
   });
+
+
+
+
+const changePasswordSchema = Joi.object({
+    oldPassword: Joi.string().min(6).required().messages({
+        'string.min': 'Old password must be at least 6 characters long',
+        'string.empty': 'Old password cannot be empty',
+        'any.required': 'Old password is required'
+    }),
+    newPassword: Joi.string().min(6).required().messages({
+        'string.min': 'New password must be at least 6 characters long',
+        'string.empty': 'New password cannot be empty',
+        'any.required': 'New password is required'
+    }),
+    confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required().messages({
+        'any.only': 'Confirmation password must match the new password',
+        'string.empty': 'Confirmation password cannot be empty',
+        'any.required': 'Confirmation password is required'
+    })
+});
+
+
+
+
+const changeEmailSchema = Joi.object({
+    currentEmail: Joi.string().email().required(),
+    newEmail: Joi.string().email().required()
+  });
+
+ 
+  const forgotPasswordSchema = Joi.object({
+    email: Joi.string().email().required(),
+  });
+  
+  const resetPasswordSchema = Joi.object({
+    email: Joi.string().email().required(),
+    otp: Joi.string().required(),
+    newPassword: Joi.string().min(6).required(),
+  });
+
+
 module.exports = {
     registerSchema,
     loginSchema,
-    profileUpdateSchema
+    profileUpdateSchema,
+    changeEmailSchema ,
+    changePasswordSchema,
+    resetPasswordSchema,
+    forgotPasswordSchema
+   
 };
