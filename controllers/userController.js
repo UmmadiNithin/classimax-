@@ -3,10 +3,10 @@ const userService = require('../services/userService');
 const sendEmail = require('../utils/sendEmail');
 
 exports.registerUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password ,confirmPassword} = req.body;
 
   try {
-    const user = await userService.registerUser(email, password);
+    const user = await userService.registerUser(email, password,confirmPassword);
     return res.status(201).json({
       result: user,
       message: 'User registered successfully',
